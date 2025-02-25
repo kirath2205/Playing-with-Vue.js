@@ -4,6 +4,7 @@
       <RouterLink to="/">🏠 Home</RouterLink>
       <RouterLink to="/completed">✅ Completed</RouterLink>
       <RouterLink to="/placeholderTasks">ℹ️ Place Holder Tasks</RouterLink>
+      <RouterLink to="/agGridTasks">ℹ️ Tasks IN AG Grid </RouterLink>
     </nav>
     <RouterView />
   </div>
@@ -11,6 +12,8 @@
 
 <script setup>
 import { RouterLink, RouterView } from "vue-router";
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-alpine.css";
 </script>
 
 <style scoped>
