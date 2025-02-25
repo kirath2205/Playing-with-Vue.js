@@ -1,21 +1,17 @@
 import {defineStore} from "pinia";
-import {ref, watch} from "vue";
+import {ref} from "vue";
 import axios from "axios";
 
 const API_URL = "https://jsonplaceholder.typicode.com/todos";
 
-export const placeHolderStore = defineStore("placeHolderStore", target => {
+export const placeHolderStore = defineStore("placeHolderStore", () => {
   const tasks = ref([]);
   const loading = ref(false);
   const error = ref(null);
 
   const fetchTasks = async () => {
-
-    watch(tasks, (newTasks) => {
-      console.log("Updated tasks in UI:", newTasks);
-    }, { deep: true });
-
     loading.value = true;
+    error.value = null;
 
     try {
       const response = await axios.get(API_URL+"?_limit=5");
@@ -32,37 +28,60 @@ export const placeHolderStore = defineStore("placeHolderStore", target => {
     } finally {
       loading.value = false;
     }
-  }
+  };
 
   const toggleTask = async (id) => {
-    const index = tasks.value.findIndex(task => task.id === id);
-    if (index !== -1) {
-      try {
-        await axios.put(`${API_URL}/${id}`, {
-          title: tasks.value[index].title,
-          completed: !tasks.value[index].completed
-        });
+    const taskIndex = tasks.value.findIndex(task => task.id === id);
 
-        // ✅ Reassign entire object to trigger Vue reactivity
-        tasks.value[index] = { ...tasks.value[index], completed: !tasks.value[index].completed };
-        tasks.value = [...tasks.value];  // ✅ Forces Vue to detect changes
+    if (taskIndex === -1) {
+      console.error(`Task with id ${id} not found`);
+      return;
+    }
 
-        console.log("Task toggled, new list:", tasks.value);
-      } catch (err) {
-        error.value = "Failed to update task!";
-      }
+    const task = tasks.value[taskIndex];
+    const newStatus = !task.completed;
+
+    tasks.value = tasks.value.map((t, index) =>
+      index === taskIndex ? { ...t, completed: newStatus } : t
+    );
+
+    try {
+      const response = await axios.put(`${API_URL}/${id}`, {
+        ...task,
+        completed: newStatus
+      });
+
+    } catch (err) {
+      error.value = "Failed to update task on server";
+
+      tasks.value = tasks.value.map((t, index) =>
+        index === taskIndex ? { ...t, completed: !newStatus } : t
+      );
     }
   };
 
   const removeTask = async (id) => {
+    // Remove from UI first
+    const taskToRemove = tasks.value.find(task => task.id === id);
+    tasks.value = tasks.value.filter(task => task.id !== id);
+
     try {
-      await axios.delete(`${API_URL}/${id}`); // API uses IDs
-      tasks.value = tasks.value.filter(task => task.id !== id);
-      console.log("Task removed, current list - ", tasks.value);
+      await axios.delete(`${API_URL}/${id}`);
     } catch (err) {
-      error.value = "Failed to remove task!";
+      error.value = "Failed to remove task";
+
+      if (taskToRemove) {
+        tasks.value = [...tasks.value, taskToRemove];
+      }
     }
   };
 
-  return { tasks, fetchTasks, toggleTask, removeTask, loading, error };
-})
+  return {
+    tasks,
+    fetchTasks,
+    toggleTask,
+    removeTask,
+    loading,
+    error
+  };
+});

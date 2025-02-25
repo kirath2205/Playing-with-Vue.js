@@ -1,40 +1,43 @@
 <script setup>
-
 import TaskItem from "@/components/TaskItem.vue";
-import {watch} from "vue";
+defineProps(["tasks"]);
+const emit = defineEmits(["delete-task", "toggle-task"]);
 
-defineProps(["tasks"])
-const emit = defineEmits(["delete-task", "toggle-task"])
+const removeTask = (id) => {
+  emit("delete-task", id);
+};
 
-const removeTask = (title) => {
-  emit("delete-task", title)
-}
-
-const toggleTask = (title) => {
-  emit("toggle-task", title)
-}
-
+const toggleTask = (id) => {
+  emit("toggle-task", id);
+};
 </script>
 
 <template>
-  <div class="grid">
-    <ul>
-      <pre>{{ tasks }}</pre>
-      <TaskItem v-for="(task, index) in tasks"
-                :key="index" :task="task"
-                @remove-task="removeTask(task.id ? task.id : task.title)"
-                @toggle-task="toggleTask(task.id ? task.id : task.title)"/>
+  <div class="task-list-container">
+    <p v-if="!tasks || tasks.length === 0">No tasks to display</p>
+
+    <ul v-else>
+      <TaskItem
+        v-for="task in tasks"
+        :key="task.id || task.title"
+        :task="task"
+        @remove-task="removeTask"
+        @toggle-task="toggleTask"
+      />
     </ul>
   </div>
 </template>
 
 <style scoped>
-.grid {
-  display: grid;
-  gap: 10px;
-  padding: 0;
-  list-style-type: none;
+.task-list-container {
   width: 100%;
-  max-width: 400px;
+  max-width: 550px;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
 }
 </style>

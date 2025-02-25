@@ -2,30 +2,41 @@
 
 import {placeHolderStore} from "@/stores/placeHolderStore.js";
 import TaskList from "@/components/TaskList.vue";
-import {RouterView} from "vue-router";
-import {onMounted} from "vue";
+import { onMounted, computed } from "vue";
 
-const { tasks, fetchTasks, toggleTask, removeTask , loading, error} = placeHolderStore();
+const store = placeHolderStore();
+const tasks = computed(() => store.tasks);
 
-onMounted(fetchTasks);
+onMounted(() => {
+  store.fetchTasks();
+});
+
 </script>
 
 <template>
-
-  <p v-if="loading">Loading tasks...</p>
-  <p v-if="error" class="error">{{ error }}</p>
-
   <div class="container">
     <h1>📝 Placeholder To-Do List</h1>
-    <TaskList :tasks="tasks"
-              @delete-task="removeTask"
-              @toggle-task="toggleTask"
+
+    <p v-if="store.loading">Loading tasks...</p>
+    <p v-if="store.error" class="error">{{ store.error }}</p>
+
+    <TaskList
+      :tasks="tasks"
+      @delete-task="store.removeTask"
+      @toggle-task="store.toggleTask"
     />
   </div>
-  <RouterView />
-
 </template>
 
 <style scoped>
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
+.error {
+  color: red;
+  font-weight: bold;
+}
 </style>
